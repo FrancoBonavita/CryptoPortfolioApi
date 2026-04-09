@@ -1,0 +1,426 @@
+{
+  "info": {
+    "name": "Crypto Portfolio API",
+    "description": "Collection for testing the Crypto Portfolio REST API.\n\nUsage:\n1. Import this file into Postman.\n2. Make sure the server is running (npm run dev).\n3. Run requests in order: Create → Get All → Get By ID → Update → Delete → Market Price.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api"
+    },
+    {
+      "key": "assetId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "GET /health",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:3000/health",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["health"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Returns ok', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.status).to.eql('ok');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Assets CRUD",
+      "item": [
+        {
+          "name": "1. Create Asset (BTC)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/assets",
+              "host": ["{{baseUrl}}"],
+              "path": ["assets"]
+            },
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"symbol\": \"BTC\",\n  \"name\": \"Bitcoin\",\n  \"quantity\": 1.5,\n  \"purchasePrice\": 42000\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Returns created asset', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.success).to.be.true;",
+                  "  pm.expect(json.data.symbol).to.eql('BTC');",
+                  "  pm.collectionVariables.set('assetId', json.data.id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2. Create Asset (ETH)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/assets",
+              "host": ["{{baseUrl}}"],
+              "path": ["assets"]
+            },
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"symbol\": \"ETH\",\n  \"name\": \"Ethereum\",\n  \"quantity\": 10,\n  \"purchasePrice\": 2200\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Returns created asset', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.success).to.be.true;",
+                  "  pm.expect(json.data.symbol).to.eql('ETH');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3. Create Duplicate (should fail)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/assets",
+              "host": ["{{baseUrl}}"],
+              "path": ["assets"]
+            },
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"symbol\": \"BTC\",\n  \"name\": \"Bitcoin duplicate\",\n  \"quantity\": 1,\n  \"purchasePrice\": 50000\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 409 (conflict)', () => pm.response.to.have.status(409));",
+                  "pm.test('Returns error', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.success).to.be.false;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4. Create with bad body (should fail)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/assets",
+              "host": ["{{baseUrl}}"],
+              "path": ["assets"]
+            },
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"symbol\": \"\",\n  \"quantity\": \"not a number\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Returns validation errors', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.success).to.be.false;",
+                  "  pm.expect(json.errors).to.be.an('array');",
+                  "  pm.expect(json.errors.length).to.be.greaterThan(0);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5. Get All Assets",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/assets",
+              "host": ["{{baseUrl}}"],
+              "path": ["assets"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Returns array of assets', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.success).to.be.true;",
+                  "  pm.expect(json.data).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "6. Get Asset by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/assets/{{assetId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["assets", "{{assetId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Returns the correct asset', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.success).to.be.true;",
+                  "  pm.expect(json.data.id).to.eql(pm.collectionVariables.get('assetId'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "7. Get Asset not found",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/assets/nonexistent-id",
+              "host": ["{{baseUrl}}"],
+              "path": ["assets", "nonexistent-id"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Returns not found error', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.success).to.be.false;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "8. Update Asset",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{baseUrl}}/assets/{{assetId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["assets", "{{assetId}}"]
+            },
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 2.5,\n  \"purchasePrice\": 45000\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Returns updated values', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.success).to.be.true;",
+                  "  pm.expect(json.data.quantity).to.eql(2.5);",
+                  "  pm.expect(json.data.purchasePrice).to.eql(45000);",
+                  "  pm.expect(json.data.symbol).to.eql('BTC');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "9. Delete Asset",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/assets/{{assetId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["assets", "{{assetId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "10. Delete same asset again (should fail)",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/assets/{{assetId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["assets", "{{assetId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Market Prices",
+      "item": [
+        {
+          "name": "Get BTC price",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/market/BTC",
+              "host": ["{{baseUrl}}"],
+              "path": ["market", "BTC"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Returns price data', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.success).to.be.true;",
+                  "  pm.expect(json.data.priceUsd).to.be.a('number');",
+                  "  pm.expect(json.data.symbol).to.eql('BTC');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get ETH price",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/market/ETH",
+              "host": ["{{baseUrl}}"],
+              "path": ["market", "ETH"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Returns price data', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.success).to.be.true;",
+                  "  pm.expect(json.data.priceUsd).to.be.a('number');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get unknown symbol",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/market/FAKECOIN",
+              "host": ["{{baseUrl}}"],
+              "path": ["market", "FAKECOIN"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 502', () => pm.response.to.have.status(502));",
+                  "pm.test('Returns error', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.success).to.be.false;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

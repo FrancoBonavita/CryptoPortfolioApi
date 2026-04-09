@@ -1,0 +1,1 @@
+# Integration tests that spin up the Express app and test full HTTP request/response cycles.

@@ -1,0 +1,8 @@
+# Keeps node_modules, dist, .env, and git artifacts out of the Docker build context.
+node_modules
+dist
+.env
+.git
+.gitignore
+README.md
+tests
