@@ -1,35 +1,4 @@
 import type { Request, Response, NextFunction } from 'express';
-import { config } from '../config/env.js';
-import { logger } from '../utils/logger.js';
-
-// ── Rate limiter (in-memory, per IP) ────────────────────────────────────────
-// Simple sliding-window counter. Good enough for a single-instance monolith.
-// Replace with Redis-backed limiter if you ever scale horizontally.
-
-const requestCounts = new Map<string, { count: number; resetTime: number }>();
-
-export function rateLimiter(req: Request, res: Response, next: NextFunction): void {
-  const ip = req.ip ?? req.socket.remoteAddress ?? 'unknown';
-  const now = Date.now();
-  const record = requestCounts.get(ip);
-
-  // First request or window expired — start fresh.
-  if (!record || now > record.resetTime) {
-    requestCounts.set(ip, { count: 1, resetTime: now + config.rateLimitWindowMs });
-    next();
-    return;
-  }
-
-  record.count++;
-
-  if (record.count > config.rateLimitMaxRequests) {
-    logger.error({ message: 'Rate limit exceeded', ip }, 'Unhandled error');
-    res.status(429).json({ success: false, error: 'Too many requests. Please try again later.' });
-    return;
-  }
-
-  next();
-}
 
 // ── Security headers ────────────────────────────────────────────────────────
 // Lightweight alternative to helmet — covers the essentials without a dependency.

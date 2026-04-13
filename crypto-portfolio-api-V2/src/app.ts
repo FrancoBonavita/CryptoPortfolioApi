@@ -1,7 +1,7 @@
 import express from 'express';
 import { config } from './config/env.js';
 import { logger } from './utils/logger.js';
-import { cors, securityHeaders, rateLimiter } from './middlewares/security.middleware.js';
+import { cors, securityHeaders } from './middlewares/security.middleware.js';
 import { errorHandler } from './middlewares/error.middleware.js';
 import { apiRouter } from './routes/index.js';
 
@@ -13,9 +13,6 @@ app.use(securityHeaders);
 
 // 2. CORS before anything else so preflight OPTIONS resolve immediately
 app.use(cors);
-
-// 3. Rate limiter before body parsing — reject abusers early, save resources
-app.use(rateLimiter);
 
 // 4. Parse JSON bodies
 app.use(express.json());
