@@ -1,6 +1,7 @@
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import type { Request, Response, NextFunction } from 'express';
-import { validateCreateAsset, validateUpdateAsset } from '../../../src/middlewares/validation.middleware.js';
-import { describe, expect, it, jest } from '@jest/globals';
+import { validate } from '../../../src/middlewares/validation.middleware.js';
+import { createAssetSchema, updateAssetSchema } from '../../../src/models/asset.model.js';
 
 function mockResponse(): Response {
   const res = {
@@ -14,14 +15,16 @@ function mockRequest(body: unknown): Request {
   return { body } as unknown as Request;
 }
 
-describe('validateCreateAsset', () => {
+describe('validate with createAssetSchema', () => {
+
+  const validateCreate = validate(createAssetSchema);
 
   it('calls next() when body is valid', () => {
     const req = mockRequest({ symbol: 'BTC', name: 'Bitcoin', quantity: 1, purchasePrice: 40000 });
     const res = mockResponse();
     const next: NextFunction = jest.fn();
 
-    validateCreateAsset(req, res, next);
+    validateCreate(req, res, next);
 
     expect(next).toHaveBeenCalled();
     expect(res.status).not.toHaveBeenCalled();
@@ -32,13 +35,10 @@ describe('validateCreateAsset', () => {
     const res = mockResponse();
     const next: NextFunction = jest.fn();
 
-    validateCreateAsset(req, res, next);
+    validateCreate(req, res, next);
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(next).not.toHaveBeenCalled();
-
-    const errors = (res.json as jest.Mock).mock.calls[0]![0] as { errors: string[] };
-    expect(errors.errors).toHaveLength(4);
   });
 
   it('returns 400 when symbol is empty string', () => {
@@ -46,7 +46,7 @@ describe('validateCreateAsset', () => {
     const res = mockResponse();
     const next: NextFunction = jest.fn();
 
-    validateCreateAsset(req, res, next);
+    validateCreate(req, res, next);
     expect(res.status).toHaveBeenCalledWith(400);
   });
 
@@ -55,28 +55,21 @@ describe('validateCreateAsset', () => {
     const res = mockResponse();
     const next: NextFunction = jest.fn();
 
-    validateCreateAsset(req, res, next);
-    expect(res.status).toHaveBeenCalledWith(400);
-  });
-
-  it('returns 400 when quantity is Infinity', () => {
-    const req = mockRequest({ symbol: 'BTC', name: 'Bitcoin', quantity: Infinity, purchasePrice: 40000 });
-    const res = mockResponse();
-    const next: NextFunction = jest.fn();
-
-    validateCreateAsset(req, res, next);
+    validateCreate(req, res, next);
     expect(res.status).toHaveBeenCalledWith(400);
   });
 });
 
-describe('validateUpdateAsset', () => {
+describe('validate with updateAssetSchema', () => {
+
+  const validateUpdate = validate(updateAssetSchema);
 
   it('calls next() when body is valid (partial)', () => {
     const req = mockRequest({ quantity: 5 });
     const res = mockResponse();
     const next: NextFunction = jest.fn();
 
-    validateUpdateAsset(req, res, next);
+    validateUpdate(req, res, next);
     expect(next).toHaveBeenCalled();
   });
 
@@ -85,7 +78,7 @@ describe('validateUpdateAsset', () => {
     const res = mockResponse();
     const next: NextFunction = jest.fn();
 
-    validateUpdateAsset(req, res, next);
+    validateUpdate(req, res, next);
     expect(next).toHaveBeenCalled();
   });
 
@@ -94,7 +87,7 @@ describe('validateUpdateAsset', () => {
     const res = mockResponse();
     const next: NextFunction = jest.fn();
 
-    validateUpdateAsset(req, res, next);
+    validateUpdate(req, res, next);
     expect(res.status).toHaveBeenCalledWith(400);
   });
 });

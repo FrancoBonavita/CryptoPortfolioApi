@@ -2,6 +2,7 @@ import type { Request, Response } from 'express';
 import { assetController } from '../../../src/controllers/asset.controller.js';
 import { assetRepository } from '../../../src/repositories/asset.repository.js';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { assetService } from '../../../src/services/asset.service.js';
 
 function clearAll(): void {
   const all = assetRepository.findAll();
@@ -122,6 +123,34 @@ describe('assetController', () => {
       const res = mockResponse();
       assetController.delete(req, res);
       expect(res.status).toHaveBeenCalledWith(404);
+    });
+  });
+
+  describe('getHistory', () => {
+
+    it('returns 200 with audit logs for an asset', () => {
+      const created = assetService.create({ symbol: 'BTC', name: 'Bitcoin', quantity: 1, purchasePrice: 40000 });
+      assetService.update(created.data!.id, { quantity: 5 });
+
+      const req = mockRequest({ params: { id: created.data!.id } });
+      const res = mockResponse();
+
+      assetController.getHistory(req, res);
+
+      const body = (res.json as jest.Mock).mock.calls[0]![0] as { success: boolean; data: unknown[] };
+      expect(body.success).toBe(true);
+      expect(body.data.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('returns 200 with empty array for asset with no history', () => {
+      const req = mockRequest({ params: { id: 'no-history-id' } });
+      const res = mockResponse();
+
+      assetController.getHistory(req, res);
+
+      const body = (res.json as jest.Mock).mock.calls[0]![0] as { success: boolean; data: unknown[] };
+      expect(body.success).toBe(true);
+      expect(body.data).toEqual([]);
     });
   });
 });

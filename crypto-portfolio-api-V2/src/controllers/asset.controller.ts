@@ -61,4 +61,11 @@ export const assetController = {
 
     res.status(204).send();
   },
+
+  getHistory(req: Request, res: Response): void {
+    const id = getParam(req, 'id');
+    const result = assetService.getHistory(id);
+
+    res.json({ success: true, data: result.data });
+  },
 };

@@ -11,3 +11,4 @@ assetRouter.get('/:id', assetController.getById);
 assetRouter.post('/', validate(createAssetSchema), assetController.create);
 assetRouter.put('/:id', validate(updateAssetSchema), assetController.update);
 assetRouter.delete('/:id', assetController.delete);
+assetRouter.get('/:id/history', assetController.getHistory);
