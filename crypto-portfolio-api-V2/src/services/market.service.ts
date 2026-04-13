@@ -51,7 +51,7 @@ export const marketService = {
       clearTimeout(timeout);
 
       if (!response.ok) {
-        logger.warn('Market API returned non-OK status', { status: response.status, symbol });
+        logger.warn({ status: response.status, symbol }, 'Market API returned non-OK status');
         return { error: `Market data unavailable for "${symbol}"` };
       }
 
@@ -72,7 +72,7 @@ export const marketService = {
       };
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error';
-      logger.error('Failed to fetch market price', { symbol, error: message });
+      logger.error({ symbol, error: message }, 'Failed to fetch market price');
       return { error: `Failed to fetch market data: ${message}` };
     }
   },

@@ -33,7 +33,5 @@ app.use(errorHandler);
 
 // ── Start server ────────────────────────────────────────────────────────────
 app.listen(config.port, () => {
-  logger.info(`Server running on http://localhost:${config.port}`, {
-    environment: config.nodeEnv,
-  });
+  logger.info({ environment: config.nodeEnv }, `Server running on http://localhost:${config.port}`);
 });

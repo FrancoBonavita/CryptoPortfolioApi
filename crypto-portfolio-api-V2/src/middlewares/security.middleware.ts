@@ -23,7 +23,7 @@ export function rateLimiter(req: Request, res: Response, next: NextFunction): vo
   record.count++;
 
   if (record.count > config.rateLimitMaxRequests) {
-    logger.warn('Rate limit exceeded', { ip });
+    logger.error({ message: 'Rate limit exceeded', ip }, 'Unhandled error');
     res.status(429).json({ success: false, error: 'Too many requests. Please try again later.' });
     return;
   }

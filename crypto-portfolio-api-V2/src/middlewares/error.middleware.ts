@@ -5,8 +5,8 @@ import { config } from '../config/env.js';
 // Express recognises this as an error middleware because it has 4 parameters.
 // Must keep all four even if unused — that's how Express identifies it.
 export function errorHandler(err: Error, _req: Request, res: Response, _next: NextFunction): void {
-  logger.error('Unhandled error', { message: err.message, stack: err.stack });
-
+  logger.error({ message: err.message, stack: err.stack }, 'Unhandled error');
+  
   // In development, include the message for easier debugging.
   // In production, never leak internal details to the client.
   const message = config.nodeEnv === 'development'

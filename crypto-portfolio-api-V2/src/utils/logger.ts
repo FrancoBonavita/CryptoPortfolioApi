@@ -1,29 +1,21 @@
-// Structured JSON logger.
-// Every log line is a single JSON object — easy to grep, pipe, or ship to any
-// observability tool later (Datadog, ELK, CloudWatch) without changing code.
+import pino from 'pino';
+import { createWriteStream } from 'node:fs';
+import { mkdir } from 'node:fs/promises';
 
-type LogLevel = 'info' | 'warn' | 'error';
+// Ensure logs directory exists
+await mkdir('logs', { recursive: true });
 
-function formatEntry(level: LogLevel, message: string, meta?: Record<string, unknown>): string {
-  return JSON.stringify({
-    level,
-    timestamp: new Date().toISOString(),
-    message,
-    ...meta,
-  });
-}
+// File transport — writes to logs/app.log
+const fileStream = createWriteStream('logs/app.log', { flags: 'a' });
 
-export const logger = {
-
-  info(message: string, meta?: Record<string, unknown>): void {
-    console.log(formatEntry('info', message, meta));
+// Two transports: console + file
+export const logger = pino(
+  {
+    level: 'info',
+    timestamp: pino.stdTimeFunctions.isoTime,
   },
-
-  warn(message: string, meta?: Record<string, unknown>): void {
-    console.warn(formatEntry('warn', message, meta));
-  },
-
-  error(message: string, meta?: Record<string, unknown>): void {
-    console.error(formatEntry('error', message, meta));
-  },
-};
+  pino.multistream([
+    { stream: process.stdout },
+    { stream: fileStream },
+  ]),
+);
